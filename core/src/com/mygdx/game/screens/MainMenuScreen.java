@@ -11,6 +11,8 @@ public class MainMenuScreen implements Screen{
 	private static final int EXIT_BUTTON_HEIGHT = 150;
 	private static final int PLAY_BUTTON_WIDTH = 330;
 	private static final int PLAY_BUTTON_HEIGHT = 150;
+	
+	// Declare the height of the button from the bottom of the screen
 	private static final int EXIT_BUTTON_Y = 100;
 	private static final int PLAY_BUTTON_Y = 300;
 
@@ -38,7 +40,8 @@ public class MainMenuScreen implements Screen{
 
 	@Override
 	public void render(float delta) {
-		Gdx.gl.glClearColor(1, 0, 0, 1);
+		// Set the colour for the background. The order is R G B
+		Gdx.gl.glClearColor(0.2f, 0.2f, 0.3f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	
 		game.batch.begin();
@@ -49,8 +52,18 @@ public class MainMenuScreen implements Screen{
 		if(Gdx.input.getX() < x + EXIT_BUTTON_WIDTH && Gdx.input.getX() > x && Mathsplosive.HEIGHT - Gdx.input.getY() < EXIT_BUTTON_Y + EXIT_BUTTON_HEIGHT && Mathsplosive.HEIGHT - Gdx.input.getY() > EXIT_BUTTON_Y) {
 			// Drawing Textures, with parameters being x, y, width, height
 			game.batch.draw(exitButtonActive, ((Mathsplosive.WIDTH / 2) - (EXIT_BUTTON_WIDTH / 2)), EXIT_BUTTON_Y, EXIT_BUTTON_WIDTH, EXIT_BUTTON_HEIGHT);
+			
+			if (Gdx.input.isTouched()) {
+				Gdx.app.exit();
+			}
 		} else {
-		game.batch.draw(exitButtonInactive, ((Mathsplosive.WIDTH / 2) - (EXIT_BUTTON_WIDTH / 2)), EXIT_BUTTON_Y, EXIT_BUTTON_WIDTH, EXIT_BUTTON_HEIGHT);
+			game.batch.draw(exitButtonInactive, ((Mathsplosive.WIDTH / 2) - (EXIT_BUTTON_WIDTH / 2)), EXIT_BUTTON_Y, EXIT_BUTTON_WIDTH, EXIT_BUTTON_HEIGHT);
+		
+			if (Gdx.input.isTouched()) {
+				// Call dispose to discard screen after its done
+				this.dispose();
+				game.setScreen(new GameScreen(game));
+			}
 		}
 		
 		x = Mathsplosive.WIDTH / 2 - PLAY_BUTTON_WIDTH / 2; 

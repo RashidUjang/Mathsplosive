@@ -9,7 +9,7 @@ public class DesktopLauncher {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		
 		// Use foregroundFPS of config to change the fps lock
-		config.foregroundFPS = 10;
+		config.foregroundFPS = 60;
 		
 		// Use width and height to control the size of the application window
 		config.width = Mathsplosive.WIDTH;
