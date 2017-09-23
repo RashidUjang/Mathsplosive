@@ -1,5 +1,7 @@
 package com.mygdx.game.screens;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input.Keys;
@@ -8,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mygdx.game.Mathsplosive;
+import com.mygdx.game.entities.Bullet;
 
 public class GameScreen implements Screen {
 	
@@ -19,6 +22,7 @@ public class GameScreen implements Screen {
 	public static final int SHIP_WIDTH = SHIP_WIDTH_PIXEL * 3;
 	// 32 * 3, because the spritesheet for ship is 32
 	public static final int SHIP_HEIGHT = SHIP_HEIGHT_PIXEL * 3;
+	public static final float SHOOT_WAIT_TIME = 0.3f;
 	
 	// Animation speed. 0.5 secs per frame
 	public static final float SHIP_ANIMATION_SPEED = 0.5f;
@@ -29,10 +33,13 @@ public class GameScreen implements Screen {
 	
 	float x = 0, y = 0;
 	float stateTime;
-	float rollTimer = 0;
+	float rollTimer;
+	float shootTimer;
 	
 	// an integer roll to keep track of the roll of the sprite
 	int roll;
+	
+	ArrayList<Bullet> bullets;
 	
 	Mathsplosive game;
 	
@@ -40,8 +47,11 @@ public class GameScreen implements Screen {
 		this.game = game;
 		y = 15;
 		x = Mathsplosive.WIDTH / 2 - SHIP_WIDTH / 2;
+		bullets = new ArrayList<Bullet>();
+		shootTimer = 0;
 		
 		roll = 2;
+		rollTimer = 0;
 		rolls = new Animation[5];
 		
 		// Splitting the texture by its boxes.
@@ -61,6 +71,25 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
+		shootTimer += delta;
+		
+		if (Gdx.input.isKeyPressed(Keys.SPACE) && shootTimer >= SHOOT_WAIT_TIME) {
+			shootTimer = 0;
+			bullets.add(new Bullet(x + 4));
+			bullets.add(new Bullet(x + SHIP_WIDTH - 4));
+		}
+		
+		ArrayList<Bullet> bulletsToRemove = new ArrayList<Bullet>();
+		
+		for (Bullet bullet : bullets) {
+			bullet.update(delta);
+			
+			if(bullet.remove) {
+				bulletsToRemove.add(bullet);
+			}
+		}
+		
+		bullets.remove(bulletsToRemove);
 		// Command to get the delta time, which is the time between rendered frames
 		// isKeyPressed means is it pressed at that instant
 		// if isKeyJustPressed means that is it just recently pressed last frame
@@ -89,7 +118,7 @@ public class GameScreen implements Screen {
 			
 			// If 0.15 secs have passed, reset timer and check if its 0 to not roll it too far
 			if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll > 0) {
-				rollTimer = 0;
+				rollTimer -= ROLL_TIMER_SWITCH_TIMER;
 				roll--;
 			}
 		} else {
@@ -97,7 +126,7 @@ public class GameScreen implements Screen {
 				rollTimer += Gdx.graphics.getDeltaTime();
 				
 				if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll < 4) {
-					rollTimer = 0;
+					rollTimer -= ROLL_TIMER_SWITCH_TIMER;
 					roll++;
 								
 					if (roll > 4) {
@@ -125,7 +154,7 @@ public class GameScreen implements Screen {
 						
 			// If 0.15 secs have passed, reset timer and check if its 0 to not roll it too far
 			if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll < 4) {
-				rollTimer = 0;
+				rollTimer -= ROLL_TIMER_SWITCH_TIMER;
 				roll++;
 			}
 		} else {
@@ -133,7 +162,7 @@ public class GameScreen implements Screen {
 				rollTimer -= Gdx.graphics.getDeltaTime();
 				
 				if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll > 0) {
-					rollTimer = 0;
+					rollTimer -= ROLL_TIMER_SWITCH_TIMER;
 					roll--;
 				}
 			}
@@ -147,6 +176,9 @@ public class GameScreen implements Screen {
 		// Start drawing images to the screen
 		game.batch.begin();
 		
+		for (Bullet bullet : bullets) {
+			bullet.render(game.batch);
+		}
 		game.batch.draw(rolls[roll].getKeyFrame(stateTime, true), x, y, SHIP_WIDTH, SHIP_HEIGHT);
 		// End of drawing images to the screen
 		game.batch.end();
