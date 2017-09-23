@@ -1,6 +1,7 @@
 package com.mygdx.game.screens;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -8,8 +9,11 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mygdx.game.Mathsplosive;
+import com.mygdx.game.entities.Asteroid;
 import com.mygdx.game.entities.Bullet;
 
 public class GameScreen implements Screen {
@@ -23,9 +27,10 @@ public class GameScreen implements Screen {
 	// 32 * 3, because the spritesheet for ship is 32
 	public static final int SHIP_HEIGHT = SHIP_HEIGHT_PIXEL * 3;
 	public static final float SHOOT_WAIT_TIME = 0.3f;
-	
 	// Animation speed. 0.5 secs per frame
 	public static final float SHIP_ANIMATION_SPEED = 0.5f;
+	public static final float MIN_ASTEROID_SPAWN_TIME = 0.3f;
+	public static final float MAX_ASTEROID_SPAWN_TIME = 0.6f;
 	
 	// 0.15 seconds per switch to next animation
 	public static final float ROLL_TIMER_SWITCH_TIMER = 0.10f;
@@ -35,11 +40,17 @@ public class GameScreen implements Screen {
 	float stateTime;
 	float rollTimer;
 	float shootTimer;
-	
+	float asteroidSpawnTimer;
 	// an integer roll to keep track of the roll of the sprite
 	int roll;
+	int score;
+	
+	Random random;
 	
 	ArrayList<Bullet> bullets;
+	ArrayList<Asteroid> asteroids;
+	
+	BitmapFont scoreFont;
 	
 	Mathsplosive game;
 	
@@ -47,8 +58,17 @@ public class GameScreen implements Screen {
 		this.game = game;
 		y = 15;
 		x = Mathsplosive.WIDTH / 2 - SHIP_WIDTH / 2;
+		
 		bullets = new ArrayList<Bullet>();
+		asteroids = new ArrayList<Asteroid>();
+		// Get from internal file which is from assets folder
+		scoreFont = new BitmapFont(Gdx.files.internal("fonts/score.fnt"));
 		shootTimer = 0;
+		score = 0;
+		
+		// Generate number between 0.3 to 0.6 for the timer
+		random = new Random();
+		asteroidSpawnTimer = random.nextFloat() * (MAX_ASTEROID_SPAWN_TIME - MIN_ASTEROID_SPAWN_TIME) + MIN_ASTEROID_SPAWN_TIME;
 		
 		roll = 2;
 		rollTimer = 0;
@@ -79,9 +99,28 @@ public class GameScreen implements Screen {
 			bullets.add(new Bullet(x + SHIP_WIDTH - 4));
 		}
 		
+		// Subtract delta from timer 
+		asteroidSpawnTimer -= delta;
+		
+		// If less than 0 after being subtracted, spawn asteroid and reset timer
+		if (asteroidSpawnTimer <= 0) {
+			asteroidSpawnTimer = random.nextFloat() * (MAX_ASTEROID_SPAWN_TIME - MIN_ASTEROID_SPAWN_TIME) + MIN_ASTEROID_SPAWN_TIME;
+			asteroids.add(new Asteroid(random.nextInt(Gdx.graphics.getWidth() - Asteroid.WIDTH)));
+		}
+		
+		ArrayList<Asteroid> asteroidsToRemove = new ArrayList<Asteroid>();
+		
+		for(Asteroid asteroid : asteroids) {
+			asteroid.update(delta);
+			
+			if(asteroid.remove) {
+				asteroidsToRemove.add(asteroid);
+			}
+		}
+		
 		ArrayList<Bullet> bulletsToRemove = new ArrayList<Bullet>();
 		
-		for (Bullet bullet : bullets) {
+		for(Bullet bullet : bullets) {
 			bullet.update(delta);
 			
 			if(bullet.remove) {
@@ -89,8 +128,9 @@ public class GameScreen implements Screen {
 			}
 		}
 		
-		bullets.remove(bulletsToRemove);
+		
 		// Command to get the delta time, which is the time between rendered frames
+		
 		// isKeyPressed means is it pressed at that instant
 		// if isKeyJustPressed means that is it just recently pressed last frame
 		if (Gdx.input.isKeyPressed(Keys.UP)) {
@@ -168,6 +208,19 @@ public class GameScreen implements Screen {
 			}
 		}
 		
+		for (Bullet bullet : bullets) {
+			for (Asteroid asteroid : asteroids) {
+				if(bullet.getCollisionRect().collidesWith(asteroid.getCollisionRect())) {
+					bulletsToRemove.add(bullet);
+					asteroidsToRemove.add(asteroid);
+					score += 100;
+				}
+			}
+		}
+		
+		asteroids.removeAll(asteroidsToRemove);
+		bullets.removeAll(bulletsToRemove);
+		
 		stateTime += delta;
 		// Runs render at every frame
 		// OpenGL stuff
@@ -176,9 +229,20 @@ public class GameScreen implements Screen {
 		// Start drawing images to the screen
 		game.batch.begin();
 		
+		// Need to pass string for second argument, but this is a workaround
+		GlyphLayout scoreLayout = new GlyphLayout(scoreFont, "" + score);
+		
+		// Set x to center, but y to 10 pixels below the top of the screen
+		scoreFont.draw(game.batch, scoreLayout, Gdx.graphics.getWidth() / 2 - scoreLayout.width / 2, Gdx.graphics.getHeight() - 10);
+		
 		for (Bullet bullet : bullets) {
 			bullet.render(game.batch);
 		}
+		
+		for (Asteroid asteroid : asteroids) {
+			asteroid.render(game.batch);
+		}
+		
 		game.batch.draw(rolls[roll].getKeyFrame(stateTime, true), x, y, SHIP_WIDTH, SHIP_HEIGHT);
 		// End of drawing images to the screen
 		game.batch.end();
