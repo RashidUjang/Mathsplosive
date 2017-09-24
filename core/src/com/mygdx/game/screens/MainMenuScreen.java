@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.mygdx.game.Mathsplosive;
+import com.mygdx.game.tools.ScrollingBackground;
 
 public class MainMenuScreen implements Screen{
 	private static final int EXIT_BUTTON_WIDTH = 300;
@@ -31,6 +32,9 @@ public class MainMenuScreen implements Screen{
 		exitButtonInactive = new Texture("exit_button_inactive.png");
 		playButtonActive = new Texture("play_button_active.png");
 		playButtonInactive = new Texture("play_button_inactive.png");
+	
+		game.scrollingBackground.setSpeedFixed(true);
+		game.scrollingBackground.setSpeed(ScrollingBackground.DEFAULT_SPEED);
 	}
 	
 	@Override
@@ -46,6 +50,7 @@ public class MainMenuScreen implements Screen{
 	
 		game.batch.begin();
 		
+		game.scrollingBackground.updateAndRender(delta, game.batch);
 		// Getting the 
 		int x = Mathsplosive.WIDTH / 2 - EXIT_BUTTON_WIDTH / 2; 
 		
@@ -59,7 +64,7 @@ public class MainMenuScreen implements Screen{
 		} else {
 			game.batch.draw(exitButtonInactive, ((Mathsplosive.WIDTH / 2) - (EXIT_BUTTON_WIDTH / 2)), EXIT_BUTTON_Y, EXIT_BUTTON_WIDTH, EXIT_BUTTON_HEIGHT);
 		
-			if (Gdx.input.isTouched()) {
+			if (Gdx.input.justTouched()) {
 				// Call dispose to discard screen after its done
 				this.dispose();
 				game.setScreen(new GameScreen(game));

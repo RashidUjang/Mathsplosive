@@ -95,6 +95,8 @@ public class GameScreen implements Screen {
 		rolls[2] = new Animation<TextureRegion>(SHIP_ANIMATION_SPEED, rollSpriteSheet[0]); // No tilt
 		rolls[3] = new Animation<TextureRegion>(SHIP_ANIMATION_SPEED, rollSpriteSheet[3]);
 		rolls[4] = new Animation<TextureRegion>(SHIP_ANIMATION_SPEED, rollSpriteSheet[4]); // All right
+	
+		game.scrollingBackground.setSpeedFixed(false);
 	}
 
 	@Override
@@ -272,6 +274,7 @@ public class GameScreen implements Screen {
 		// Start drawing images to the screen
 		game.batch.begin();
 		
+		game.scrollingBackground.updateAndRender(delta, game.batch);
 		// Need to pass string for second argument, but this is a workaround
 		GlyphLayout scoreLayout = new GlyphLayout(scoreFont, "" + score);
 		
