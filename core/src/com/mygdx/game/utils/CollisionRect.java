@@ -1,4 +1,4 @@
-package com.mygdx.game.tools;
+package com.mygdx.game.utils;
 
 public class CollisionRect {
 	float x, y;

@@ -1,9 +1,9 @@
-package com.mygdx.game.entities;
+package com.mygdx.game.objects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.mygdx.game.tools.CollisionRect;
+import com.mygdx.game.utils.CollisionRect;
 
 public class Bullet {
 	public static final int SPEED = 500;

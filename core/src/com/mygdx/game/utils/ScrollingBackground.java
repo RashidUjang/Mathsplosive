@@ -1,4 +1,4 @@
-package com.mygdx.game.tools;
+package com.mygdx.game.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class ScrollingBackground {
 
 	public static final int DEFAULT_SPEED = 80;
-	public static final int ACCELERATION = 500;
+	public static final int ACCELERATION = 50;
 	public static final int GOAL_REACH_ACCELERATION = 200;
 	
 	Texture image;

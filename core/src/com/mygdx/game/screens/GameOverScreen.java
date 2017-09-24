@@ -10,7 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.utils.Align;
 import com.mygdx.game.Mathsplosive;
-import com.mygdx.game.tools.ScrollingBackground;
+import com.mygdx.game.utils.ScrollingBackground;
 
 public class GameOverScreen implements Screen{
 	

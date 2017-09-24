@@ -1,12 +1,12 @@
-package com.mygdx.game.entities;
+package com.mygdx.game.objects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.mygdx.game.tools.CollisionRect;
+import com.mygdx.game.utils.CollisionRect;
 
 public class Asteroid {
-	public static final int SPEED = 250;
+	public static final int SPEED = 25;
 	
 	// 16 is width of asteroid
 	public static final int WIDTH = 16;

@@ -4,11 +4,11 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygdx.game.screens.GameScreen;
 import com.mygdx.game.screens.MainMenuScreen;
-import com.mygdx.game.tools.ScrollingBackground;
+import com.mygdx.game.utils.ScrollingBackground;
 
 public class Mathsplosive extends Game {
 	
-	public static final int WIDTH = 480;
+	public static final int WIDTH = 1280;
 	public static final int HEIGHT = 720;
 	
 	public SpriteBatch batch;

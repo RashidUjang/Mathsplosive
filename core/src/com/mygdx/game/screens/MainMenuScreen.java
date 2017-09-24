@@ -5,7 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.mygdx.game.Mathsplosive;
-import com.mygdx.game.tools.ScrollingBackground;
+import com.mygdx.game.utils.ScrollingBackground;
 
 public class MainMenuScreen implements Screen{
 	private static final int EXIT_BUTTON_WIDTH = 300;

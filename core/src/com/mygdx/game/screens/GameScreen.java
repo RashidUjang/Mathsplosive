@@ -14,10 +14,10 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mygdx.game.Mathsplosive;
-import com.mygdx.game.entities.Asteroid;
-import com.mygdx.game.entities.Bullet;
-import com.mygdx.game.entities.Explosion;
-import com.mygdx.game.tools.CollisionRect;
+import com.mygdx.game.objects.Asteroid;
+import com.mygdx.game.objects.Bullet;
+import com.mygdx.game.objects.Explosion;
+import com.mygdx.game.utils.CollisionRect;
 
 public class GameScreen implements Screen {
 	
@@ -32,8 +32,8 @@ public class GameScreen implements Screen {
 	public static final float SHOOT_WAIT_TIME = 0.3f;
 	// Animation speed. 0.5 secs per frame
 	public static final float SHIP_ANIMATION_SPEED = 0.5f;
-	public static final float MIN_ASTEROID_SPAWN_TIME = 0.3f;
-	public static final float MAX_ASTEROID_SPAWN_TIME = 0.6f;
+	public static final float MIN_ASTEROID_SPAWN_TIME = 1.5f;
+	public static final float MAX_ASTEROID_SPAWN_TIME = 2f;
 	
 	// 0.15 seconds per switch to next animation
 	public static final float ROLL_TIMER_SWITCH_TIMER = 0.10f;
@@ -106,6 +106,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
+		// Shooting the bullet
 		shootTimer += delta;
 		
 		if (Gdx.input.isKeyPressed(Keys.SPACE) && shootTimer >= SHOOT_WAIT_TIME) {
@@ -162,13 +163,6 @@ public class GameScreen implements Screen {
 		
 		// isKeyPressed means is it pressed at that instant
 		// if isKeyJustPressed means that is it just recently pressed last frame
-		if (Gdx.input.isKeyPressed(Keys.UP)) {
-			y += SPEED * Gdx.graphics.getDeltaTime();
-		}
-		
-		if (Gdx.input.isKeyPressed(Keys.DOWN)) {
-			y -= SPEED * Gdx.graphics.getDeltaTime();
-		}
 		
 		if (Gdx.input.isKeyPressed(Keys.LEFT)) {
 			x -= SPEED * Gdx.graphics.getDeltaTime();
