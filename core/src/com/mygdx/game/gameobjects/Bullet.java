@@ -1,4 +1,4 @@
-package com.mygdx.game.objects;
+package com.mygdx.game.gameobjects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygdx.game.utils.CollisionRect;
 
 public class Bullet {
-	public static final int SPEED = 500;
+	public static final int SPEED = 1500;
 	
 	// 40 because the bullet is from the ship
 	public static final int DEFAULT_Y = 40;

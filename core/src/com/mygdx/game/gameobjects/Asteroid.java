@@ -1,11 +1,11 @@
-package com.mygdx.game.objects;
+package com.mygdx.game.gameobjects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.mygdx.game.utils.CollisionRect;
 
-public class Asteroid {
+public class Asteroid implements Comparable<Asteroid>{
 	public static final int SPEED = 25;
 	
 	// 16 is width of asteroid
@@ -14,7 +14,7 @@ public class Asteroid {
 	
 	// Static because every bullet accesses the same texture 
 	private static Texture texture;
-	
+	// x coordinate and y coordinate of the object
 	float x, y;
 	
 	CollisionRect rect;
@@ -58,5 +58,20 @@ public class Asteroid {
 
 	public float getY() {
 		return y;
+	}
+	
+	public int compareTo(Asteroid other)
+	{
+		if (x < other.getX()) {
+			
+			return -1;
+		}
+		
+		if (x > other.getX()) {
+			
+			return 1;
+		}
+		
+		return 0;
 	}
 }

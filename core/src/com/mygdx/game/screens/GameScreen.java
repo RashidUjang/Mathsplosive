@@ -1,6 +1,7 @@
 package com.mygdx.game.screens;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
@@ -14,9 +15,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mygdx.game.Mathsplosive;
-import com.mygdx.game.objects.Asteroid;
-import com.mygdx.game.objects.Bullet;
-import com.mygdx.game.objects.Explosion;
+import com.mygdx.game.gameobjects.Asteroid;
+import com.mygdx.game.gameobjects.Bullet;
+import com.mygdx.game.gameobjects.Explosion;
 import com.mygdx.game.utils.CollisionRect;
 
 public class GameScreen implements Screen {
@@ -32,22 +33,23 @@ public class GameScreen implements Screen {
 	public static final float SHOOT_WAIT_TIME = 0.3f;
 	// Animation speed. 0.5 secs per frame
 	public static final float SHIP_ANIMATION_SPEED = 0.5f;
-	public static final float MIN_ASTEROID_SPAWN_TIME = 1.5f;
-	public static final float MAX_ASTEROID_SPAWN_TIME = 2f;
+	public static final float MIN_ASTEROID_SPAWN_TIME = 3.5f;
+	public static final float MAX_ASTEROID_SPAWN_TIME = 5f;
 	
 	// 0.15 seconds per switch to next animation
 	public static final float ROLL_TIMER_SWITCH_TIMER = 0.10f;
 	Animation<TextureRegion>[] rolls;
 	
-	float x = 0, y = 0;
+	float x; 
+	float y;
 	float stateTime;
 	float rollTimer;
-	float shootTimer;
 	float asteroidSpawnTimer;
 	float health = 1;
 	// an integer roll to keep track of the roll of the sprite
 	int roll;
 	int score;
+	int rotation;
 	
 	Random random;
 	
@@ -57,7 +59,7 @@ public class GameScreen implements Screen {
 	
 	BitmapFont scoreFont;
 	Texture blank;
-	
+	int countdown;
 	CollisionRect playerRect;
 	
 	Mathsplosive game;
@@ -66,15 +68,15 @@ public class GameScreen implements Screen {
 		this.game = game;
 		y = 15;
 		x = Mathsplosive.WIDTH / 2 - SHIP_WIDTH / 2;
-		
+		countdown = 0;
 		bullets = new ArrayList<Bullet>();
 		asteroids = new ArrayList<Asteroid>();
 		explosions = new ArrayList<Explosion>();
 		
 		// Get from internal file which is from assets folder
 		scoreFont = new BitmapFont(Gdx.files.internal("fonts/score.fnt"));
-		shootTimer = 0;
 		score = 0;
+		rotation = 0;
 		
 		playerRect = new CollisionRect(0, 0, SHIP_WIDTH, SHIP_HEIGHT);
 		
@@ -106,13 +108,8 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
-		// Shooting the bullet
-		shootTimer += delta;
-		
-		if (Gdx.input.isKeyPressed(Keys.SPACE) && shootTimer >= SHOOT_WAIT_TIME) {
-			shootTimer = 0;
-			bullets.add(new Bullet(x + 4));
-			bullets.add(new Bullet(x + SHIP_WIDTH - 4));
+		if (Gdx.input.isKeyPressed(Keys.ENTER)) {
+			bullets.add(new Bullet(x + SHIP_WIDTH / 2));
 		}
 		
 		// Subtract delta from timer 
@@ -123,6 +120,13 @@ public class GameScreen implements Screen {
 			asteroidSpawnTimer = random.nextFloat() * (MAX_ASTEROID_SPAWN_TIME - MIN_ASTEROID_SPAWN_TIME) + MIN_ASTEROID_SPAWN_TIME;
 			asteroids.add(new Asteroid(random.nextInt(Gdx.graphics.getWidth() - Asteroid.WIDTH)));
 		}
+		
+		// DEBUG CODE
+		if (countdown == 0) {
+			asteroids.add(new Asteroid(random.nextInt(Gdx.graphics.getWidth() - Asteroid.WIDTH)));
+			countdown++;
+		}
+		Collections.sort(asteroids);
 		
 		// Update asteroids
 		ArrayList<Asteroid> asteroidsToRemove = new ArrayList<Asteroid>();
@@ -157,78 +161,17 @@ public class GameScreen implements Screen {
 			}
 		}
 		
-		explosions.removeAll(explosionsToRemove);
-		
-		// Command to get the delta time, which is the time between rendered frames
-		
 		// isKeyPressed means is it pressed at that instant
 		// if isKeyJustPressed means that is it just recently pressed last frame
 		
 		if (Gdx.input.isKeyPressed(Keys.LEFT)) {
-			x -= SPEED * Gdx.graphics.getDeltaTime();
-			
-			if (x < 0) {
-				x = 0;
-			}
-			
-			// Check if key is JUST pressed (happens during first frame its pressed) and if no right key is being pressed
-			if (Gdx.input.isKeyJustPressed(Keys.LEFT) && !Gdx.input.isKeyPressed(Keys.RIGHT) && roll > 0) {
-				rollTimer = 0;
-				roll--;	
-			}
-			// Minus because going left. 
-			rollTimer -= Gdx.graphics.getDeltaTime();
-			
-			// If 0.15 secs have passed, reset timer and check if its 0 to not roll it too far
-			if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll > 0) {
-				rollTimer -= ROLL_TIMER_SWITCH_TIMER;
-				roll--;
-			}
-		} else {
-			if (roll < 2) {
-				rollTimer += Gdx.graphics.getDeltaTime();
-				
-				if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll < 4) {
-					rollTimer -= ROLL_TIMER_SWITCH_TIMER;
-					roll++;
-								
-					if (roll > 4) {
-						roll = 4;
-					}
-				}
-			}
+			rotation += 1;
+			rotation %= 360;
 		}
 		
 		if (Gdx.input.isKeyPressed(Keys.RIGHT)) {
-			x += SPEED * Gdx.graphics.getDeltaTime();
-			
-			if (x + SHIP_WIDTH > Gdx.graphics.getWidth()) {
-				x = Gdx.graphics.getWidth() - SHIP_WIDTH;
-			}
-			
-			// Check if key is JUST pressed (happens during first frame its pressed) and if no right key is being pressed
-			if (Gdx.input.isKeyJustPressed(Keys.RIGHT) && !Gdx.input.isKeyPressed(Keys.LEFT) && roll < 4) {
-				rollTimer = 0;
-				roll++;	
-			}
-						
-			// Plus because going right. 
-			rollTimer += Gdx.graphics.getDeltaTime();
-						
-			// If 0.15 secs have passed, reset timer and check if its 0 to not roll it too far
-			if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll < 4) {
-				rollTimer -= ROLL_TIMER_SWITCH_TIMER;
-				roll++;
-			}
-		} else {
-			if (roll > 2) {
-				rollTimer -= Gdx.graphics.getDeltaTime();
-				
-				if(Math.abs(rollTimer) > ROLL_TIMER_SWITCH_TIMER && roll > 0) {
-					rollTimer -= ROLL_TIMER_SWITCH_TIMER;
-					roll--;
-				}
-			}
+			rotation -= 1;
+			rotation %= 360;
 		}
 		
 		playerRect.move(x, y);
@@ -246,6 +189,7 @@ public class GameScreen implements Screen {
 			}
 		}
 		
+		// Check if collide with bullet
 		for (Bullet bullet : bullets) {
 			for (Asteroid asteroid : asteroids) {
 				if(bullet.getCollisionRect().collidesWith(asteroid.getCollisionRect())) {
@@ -257,8 +201,13 @@ public class GameScreen implements Screen {
 			}
 		}
 		
+		explosions.removeAll(explosionsToRemove);
 		asteroids.removeAll(asteroidsToRemove);
 		bullets.removeAll(bulletsToRemove);
+		
+		if(asteroids != null) {
+			rotation = calculateRotation((int) asteroids.get(0).getX(), (int)asteroids.get(0).getY());
+		}
 		
 		stateTime += delta;
 		// Runs render at every frame
@@ -286,7 +235,7 @@ public class GameScreen implements Screen {
 		for (Explosion explosion : explosions) {
 			explosion.render(game.batch);
 		}
-		
+	
 		// Colouring health bar
 		if(health > 0.6f) {
 			game.batch.setColor(Color.GREEN);
@@ -299,7 +248,8 @@ public class GameScreen implements Screen {
 		game.batch.draw(blank, 0, 0, Gdx.graphics.getWidth() * health, 5);
 		
 		game.batch.setColor(Color.WHITE);
-		game.batch.draw(rolls[roll].getKeyFrame(stateTime, true), x, y, SHIP_WIDTH, SHIP_HEIGHT);
+		// Draw with rotation
+		game.batch.draw(rolls[roll].getKeyFrame(stateTime, true), x, y, SHIP_WIDTH / 2, SHIP_HEIGHT / 2, SHIP_WIDTH, SHIP_HEIGHT, 1, 1, rotation);
 		// End of drawing images to the screen
 		game.batch.end();
 	}
@@ -327,5 +277,19 @@ public class GameScreen implements Screen {
 	@Override
 	public void dispose() {
 
+	}
+	
+	public int calculateRotation(int x, int y) {
+		int rotation;
+		if(x == Gdx.graphics.getWidth() / 2) {
+			return 0;
+		}
+		
+		float first = (x - this.x) / (y - this.y);
+		double second = Math.atan(first);
+		
+		rotation = (int) Math.toDegrees(second);
+		
+		return -rotation;
 	}
 }
