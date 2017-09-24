@@ -72,6 +72,7 @@ public class MainMenuScreen implements Screen{
 		} else {
 		game.batch.draw(playButtonInactive, ((Mathsplosive.WIDTH / 2) - (PLAY_BUTTON_WIDTH / 2)), PLAY_BUTTON_Y, PLAY_BUTTON_WIDTH, PLAY_BUTTON_HEIGHT);
 		}
+		
 		game.batch.end();
 	}
 

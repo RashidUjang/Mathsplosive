@@ -6,6 +6,7 @@ import java.util.Random;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -15,6 +16,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mygdx.game.Mathsplosive;
 import com.mygdx.game.entities.Asteroid;
 import com.mygdx.game.entities.Bullet;
+import com.mygdx.game.entities.Explosion;
+import com.mygdx.game.tools.CollisionRect;
 
 public class GameScreen implements Screen {
 	
@@ -41,6 +44,7 @@ public class GameScreen implements Screen {
 	float rollTimer;
 	float shootTimer;
 	float asteroidSpawnTimer;
+	float health = 1;
 	// an integer roll to keep track of the roll of the sprite
 	int roll;
 	int score;
@@ -49,8 +53,12 @@ public class GameScreen implements Screen {
 	
 	ArrayList<Bullet> bullets;
 	ArrayList<Asteroid> asteroids;
+	ArrayList<Explosion> explosions;
 	
 	BitmapFont scoreFont;
+	Texture blank;
+	
+	CollisionRect playerRect;
 	
 	Mathsplosive game;
 	
@@ -61,11 +69,16 @@ public class GameScreen implements Screen {
 		
 		bullets = new ArrayList<Bullet>();
 		asteroids = new ArrayList<Asteroid>();
+		explosions = new ArrayList<Explosion>();
+		
 		// Get from internal file which is from assets folder
 		scoreFont = new BitmapFont(Gdx.files.internal("fonts/score.fnt"));
 		shootTimer = 0;
 		score = 0;
 		
+		playerRect = new CollisionRect(0, 0, SHIP_WIDTH, SHIP_HEIGHT);
+		
+		blank = new Texture("blank.png");
 		// Generate number between 0.3 to 0.6 for the timer
 		random = new Random();
 		asteroidSpawnTimer = random.nextFloat() * (MAX_ASTEROID_SPAWN_TIME - MIN_ASTEROID_SPAWN_TIME) + MIN_ASTEROID_SPAWN_TIME;
@@ -108,6 +121,7 @@ public class GameScreen implements Screen {
 			asteroids.add(new Asteroid(random.nextInt(Gdx.graphics.getWidth() - Asteroid.WIDTH)));
 		}
 		
+		// Update asteroids
 		ArrayList<Asteroid> asteroidsToRemove = new ArrayList<Asteroid>();
 		
 		for(Asteroid asteroid : asteroids) {
@@ -118,6 +132,7 @@ public class GameScreen implements Screen {
 			}
 		}
 		
+		// Update bullets
 		ArrayList<Bullet> bulletsToRemove = new ArrayList<Bullet>();
 		
 		for(Bullet bullet : bullets) {
@@ -128,6 +143,18 @@ public class GameScreen implements Screen {
 			}
 		}
 		
+		// Update explosions
+		ArrayList<Explosion> explosionsToRemove = new ArrayList<Explosion>();
+		
+		for (Explosion explosion : explosions) {
+			explosion.update(delta);
+			
+			if(explosion.remove) {
+				explosionsToRemove.add(explosion);
+			}
+		}
+		
+		explosions.removeAll(explosionsToRemove);
 		
 		// Command to get the delta time, which is the time between rendered frames
 		
@@ -208,11 +235,27 @@ public class GameScreen implements Screen {
 			}
 		}
 		
+		playerRect.move(x, y);
+		
+		// Check if collide with asteroid
+		for(Asteroid asteroid : asteroids ) {
+			if(asteroid.getCollisionRect().collidesWith(playerRect)) {
+				asteroidsToRemove.add(asteroid);
+				health -= 0.1;
+				
+				if (health <= 0) {
+					this.dispose();
+					game.setScreen(new GameOverScreen(game, score));
+				}
+			}
+		}
+		
 		for (Bullet bullet : bullets) {
 			for (Asteroid asteroid : asteroids) {
 				if(bullet.getCollisionRect().collidesWith(asteroid.getCollisionRect())) {
 					bulletsToRemove.add(bullet);
 					asteroidsToRemove.add(asteroid);
+					explosions.add(new Explosion(asteroid.getX(), asteroid.getY()));
 					score += 100;
 				}
 			}
@@ -243,6 +286,22 @@ public class GameScreen implements Screen {
 			asteroid.render(game.batch);
 		}
 		
+		for (Explosion explosion : explosions) {
+			explosion.render(game.batch);
+		}
+		
+		// Colouring health bar
+		if(health > 0.6f) {
+			game.batch.setColor(Color.GREEN);
+		} else if(health > 0.2f) {
+			game.batch.setColor(Color.ORANGE);
+		} else {
+			game.batch.setColor(Color.RED);
+		}
+		// Drawing the healthbar
+		game.batch.draw(blank, 0, 0, Gdx.graphics.getWidth() * health, 5);
+		
+		game.batch.setColor(Color.WHITE);
 		game.batch.draw(rolls[roll].getKeyFrame(stateTime, true), x, y, SHIP_WIDTH, SHIP_HEIGHT);
 		// End of drawing images to the screen
 		game.batch.end();
