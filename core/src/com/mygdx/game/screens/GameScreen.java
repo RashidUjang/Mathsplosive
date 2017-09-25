@@ -18,7 +18,11 @@ import com.mygdx.game.Mathsplosive;
 import com.mygdx.game.gameobjects.Asteroid;
 import com.mygdx.game.gameobjects.Bullet;
 import com.mygdx.game.gameobjects.Explosion;
-import com.mygdx.game.utils.CollisionRect;
+import com.mygdx.game.gameobjects.GameObject;
+import com.mygdx.game.utils.CollisionRectangle;
+import com.mygdx.game.utils.InputHandler;
+import com.mygdx.game.utils.Question;
+import com.mygdx.game.utils.QuestionGenerator;
 
 public class GameScreen implements Screen {
 	
@@ -30,12 +34,10 @@ public class GameScreen implements Screen {
 	public static final int SHIP_WIDTH = SHIP_WIDTH_PIXEL * 3;
 	// 32 * 3, because the spritesheet for ship is 32
 	public static final int SHIP_HEIGHT = SHIP_HEIGHT_PIXEL * 3;
-	public static final float SHOOT_WAIT_TIME = 0.3f;
 	// Animation speed. 0.5 secs per frame
 	public static final float SHIP_ANIMATION_SPEED = 0.5f;
-	public static final float MIN_ASTEROID_SPAWN_TIME = 3.5f;
-	public static final float MAX_ASTEROID_SPAWN_TIME = 5f;
-	
+	public static final float MIN_ASTEROID_SPAWN_TIME = 2.5f;
+	public static final float MAX_ASTEROID_SPAWN_TIME = 4.5f;
 	// 0.15 seconds per switch to next animation
 	public static final float ROLL_TIMER_SWITCH_TIMER = 0.10f;
 	Animation<TextureRegion>[] rolls;
@@ -46,8 +48,11 @@ public class GameScreen implements Screen {
 	float rollTimer;
 	float asteroidSpawnTimer;
 	float health = 1;
+	float difficultyTimer;
+	float difficultyModifier;
 	// an integer roll to keep track of the roll of the sprite
 	int roll;
+	int input;
 	int score;
 	int rotation;
 	
@@ -59,8 +64,11 @@ public class GameScreen implements Screen {
 	
 	BitmapFont scoreFont;
 	Texture blank;
-	int countdown;
-	CollisionRect playerRect;
+	CollisionRectangle playerRect;
+	Asteroid currentTarget;
+	Question question;
+	QuestionGenerator questionGen;
+	InputHandler inputHandler;
 	
 	Mathsplosive game;
 	
@@ -68,7 +76,6 @@ public class GameScreen implements Screen {
 		this.game = game;
 		y = 15;
 		x = Mathsplosive.WIDTH / 2 - SHIP_WIDTH / 2;
-		countdown = 0;
 		bullets = new ArrayList<Bullet>();
 		asteroids = new ArrayList<Asteroid>();
 		explosions = new ArrayList<Explosion>();
@@ -77,13 +84,20 @@ public class GameScreen implements Screen {
 		scoreFont = new BitmapFont(Gdx.files.internal("fonts/score.fnt"));
 		score = 0;
 		rotation = 0;
+		currentTarget = null;
 		
-		playerRect = new CollisionRect(0, 0, SHIP_WIDTH, SHIP_HEIGHT);
+		questionGen = new QuestionGenerator();
+		question = questionGen.generateQuestion();
+		inputHandler = new InputHandler();
+		difficultyModifier = 1.0f;
+		playerRect = new CollisionRectangle(0, 0, SHIP_WIDTH, SHIP_HEIGHT);
 		
 		blank = new Texture("blank.png");
 		// Generate number between 0.3 to 0.6 for the timer
 		random = new Random();
 		asteroidSpawnTimer = random.nextFloat() * (MAX_ASTEROID_SPAWN_TIME - MIN_ASTEROID_SPAWN_TIME) + MIN_ASTEROID_SPAWN_TIME;
+		
+		difficultyTimer = 5;
 		
 		roll = 2;
 		rollTimer = 0;
@@ -103,36 +117,57 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void show() {
-		
+		Gdx.input.setInputProcessor(inputHandler);
 	}
 
 	@Override
 	public void render(float delta) {
-		if (Gdx.input.isKeyPressed(Keys.ENTER)) {
-			bullets.add(new Bullet(x + SHIP_WIDTH / 2));
-		}
-		
 		// Subtract delta from timer 
-		asteroidSpawnTimer -= delta;
+		difficultyTimer += delta;
 		
+		if(difficultyTimer <= 0) {
+			difficultyModifier *= 1.1;
+			difficultyTimer = 5;
+			questionGen.updateDifficulty(difficultyModifier);
+		}
+			
+		asteroidSpawnTimer -= delta * difficultyModifier;
+				
 		// If less than 0 after being subtracted, spawn asteroid and reset timer
 		if (asteroidSpawnTimer <= 0) {
 			asteroidSpawnTimer = random.nextFloat() * (MAX_ASTEROID_SPAWN_TIME - MIN_ASTEROID_SPAWN_TIME) + MIN_ASTEROID_SPAWN_TIME;
 			asteroids.add(new Asteroid(random.nextInt(Gdx.graphics.getWidth() - Asteroid.WIDTH)));
 		}
 		
-		// DEBUG CODE
-		if (countdown == 0) {
-			asteroids.add(new Asteroid(random.nextInt(Gdx.graphics.getWidth() - Asteroid.WIDTH)));
-			countdown++;
+		if (Gdx.input.isKeyPressed(Keys.LEFT)) {
+			rotation += 2;
+			rotation %= 360;
 		}
-		Collections.sort(asteroids);
 		
+		if (Gdx.input.isKeyPressed(Keys.RIGHT)) {
+			rotation -= 2;
+			rotation %= 360;
+		}
+		
+		if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
+				// Check if question is answered correctly
+			if(inputHandler.getInput() != "") {
+				input = Integer.parseInt(inputHandler.getInput());
+			}
+				
+			if (question.checkAnswer(input)) {
+				bullets.add(new Bullet(x + SHIP_WIDTH / 2, rotation));
+				question = questionGen.generateQuestion();
+			}
+			
+			inputHandler.resetString();
+		}
+	
 		// Update asteroids
 		ArrayList<Asteroid> asteroidsToRemove = new ArrayList<Asteroid>();
 		
 		for(Asteroid asteroid : asteroids) {
-			asteroid.update(delta);
+			asteroid.update(delta, difficultyModifier);
 			
 			if(asteroid.remove) {
 				asteroidsToRemove.add(asteroid);
@@ -164,21 +199,9 @@ public class GameScreen implements Screen {
 		// isKeyPressed means is it pressed at that instant
 		// if isKeyJustPressed means that is it just recently pressed last frame
 		
-		if (Gdx.input.isKeyPressed(Keys.LEFT)) {
-			rotation += 1;
-			rotation %= 360;
-		}
-		
-		if (Gdx.input.isKeyPressed(Keys.RIGHT)) {
-			rotation -= 1;
-			rotation %= 360;
-		}
-		
-		playerRect.move(x, y);
-		
 		// Check if collide with asteroid
 		for(Asteroid asteroid : asteroids ) {
-			if(asteroid.getCollisionRect().collidesWith(playerRect)) {
+			if(asteroid.getY() < y) {
 				asteroidsToRemove.add(asteroid);
 				health -= 0.1;
 				
@@ -205,10 +228,6 @@ public class GameScreen implements Screen {
 		asteroids.removeAll(asteroidsToRemove);
 		bullets.removeAll(bulletsToRemove);
 		
-		if(asteroids != null) {
-			rotation = calculateRotation((int) asteroids.get(0).getX(), (int)asteroids.get(0).getY());
-		}
-		
 		stateTime += delta;
 		// Runs render at every frame
 		// OpenGL stuff
@@ -219,10 +238,10 @@ public class GameScreen implements Screen {
 		
 		game.scrollingBackground.updateAndRender(delta, game.batch);
 		// Need to pass string for second argument, but this is a workaround
-		GlyphLayout scoreLayout = new GlyphLayout(scoreFont, "" + score);
+		GlyphLayout scoreLayout = new GlyphLayout(scoreFont, "Score: " + score);
+		GlyphLayout questionLayout = new GlyphLayout(scoreFont, "" + question.getQuestion() + " [" + input + "]");
 		
 		// Set x to center, but y to 10 pixels below the top of the screen
-		scoreFont.draw(game.batch, scoreLayout, Gdx.graphics.getWidth() / 2 - scoreLayout.width / 2, Gdx.graphics.getHeight() - 10);
 		
 		for (Bullet bullet : bullets) {
 			bullet.render(game.batch);
@@ -235,7 +254,9 @@ public class GameScreen implements Screen {
 		for (Explosion explosion : explosions) {
 			explosion.render(game.batch);
 		}
-	
+		
+		scoreFont.draw(game.batch, scoreLayout, Gdx.graphics.getWidth() / 2 - scoreLayout.width / 2, Gdx.graphics.getHeight() - 10);
+		scoreFont.draw(game.batch, questionLayout, Gdx.graphics.getWidth() / 2 - questionLayout.width / 2, Gdx.graphics.getHeight() / 2);
 		// Colouring health bar
 		if(health > 0.6f) {
 			game.batch.setColor(Color.GREEN);
@@ -277,19 +298,5 @@ public class GameScreen implements Screen {
 	@Override
 	public void dispose() {
 
-	}
-	
-	public int calculateRotation(int x, int y) {
-		int rotation;
-		if(x == Gdx.graphics.getWidth() / 2) {
-			return 0;
-		}
-		
-		float first = (x - this.x) / (y - this.y);
-		double second = Math.atan(first);
-		
-		rotation = (int) Math.toDegrees(second);
-		
-		return -rotation;
 	}
 }

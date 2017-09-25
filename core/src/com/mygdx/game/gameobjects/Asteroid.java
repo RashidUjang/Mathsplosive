@@ -3,38 +3,33 @@ package com.mygdx.game.gameobjects;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.mygdx.game.utils.CollisionRect;
+import com.mygdx.game.utils.CollisionRectangle;
 
-public class Asteroid implements Comparable<Asteroid>{
-	public static final int SPEED = 25;
+public class Asteroid extends GameObject {
+	public static final int SPEED = 50;
 	
 	// 16 is width of asteroid
-	public static final int WIDTH = 16;
-	public static final int HEIGHT = 16;
+	public static final int WIDTH = 128;
+	public static final int HEIGHT = 128;
 	
 	// Static because every bullet accesses the same texture 
 	private static Texture texture;
-	// x coordinate and y coordinate of the object
-	float x, y;
 	
-	CollisionRect rect;
-	
-	// Check if object should be removed
-	public boolean remove = false;
+	CollisionRectangle rect;
 	
 	public Asteroid(float x) {
 		this.x = x;
 		this.y = Gdx.graphics.getHeight();
 		
-		this.rect = new CollisionRect(x, y, WIDTH, HEIGHT);
+		this.rect = new CollisionRectangle(x, y, WIDTH, HEIGHT);
 		
 		if(texture == null) {
 			texture = new Texture("asteroid.png");
 		}
 	}
 	
-	public void update(float deltaTime) {
-		y -= SPEED * deltaTime;
+	public void update(float deltaTime, float difficultyModifier) {
+		y -= SPEED * deltaTime * difficultyModifier;
 		
 		// remove asteroid if it is less than screen height
 		if (y < -HEIGHT) {
@@ -48,7 +43,7 @@ public class Asteroid implements Comparable<Asteroid>{
 		batch.draw(texture, x, y);
 	}
 	
-	public CollisionRect getCollisionRect() {
+	public CollisionRectangle getCollisionRect() {
 		return rect;
 	}
 	
@@ -60,18 +55,7 @@ public class Asteroid implements Comparable<Asteroid>{
 		return y;
 	}
 	
-	public int compareTo(Asteroid other)
-	{
-		if (x < other.getX()) {
-			
-			return -1;
-		}
-		
-		if (x > other.getX()) {
-			
-			return 1;
-		}
-		
-		return 0;
+	public boolean equals(Asteroid otherAsteroid) {
+		return (otherAsteroid.getX() == x) && (otherAsteroid.getY() == y);
 	}
 }

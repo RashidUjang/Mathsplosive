@@ -3,31 +3,29 @@ package com.mygdx.game.gameobjects;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.mygdx.game.utils.CollisionRect;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.mygdx.game.utils.CollisionRectangle;
 
-public class Bullet {
+public class Bullet extends GameObject{
 	public static final int SPEED = 1500;
 	
 	// 40 because the bullet is from the ship
-	public static final int DEFAULT_Y = 40;
-	public static final int WIDTH = 3;
-	public static final int HEIGHT = 12;
+	public static final int COORDINATE = 40;
+	public static final int WIDTH = 18;
+	public static final int HEIGHT = 17;
 	
 	// Static because every bullet accesses the same texture 
 	private static Texture texture;
 	
-	float x, y;
+	int rotation;
+	CollisionRectangle rect;
 	
-	CollisionRect rect;
-
-	// Check if object should be removed
-	public boolean remove = false;
-	
-	public Bullet(float x) {
+	public Bullet(float x, int rotation) {
 		this.x = x;
-		this.y = DEFAULT_Y;
+		this.y = COORDINATE;
+		this.rotation = rotation;
 		
-		this.rect = new CollisionRect(x, y, WIDTH, HEIGHT);
+		this.rect = new CollisionRectangle(x, y, WIDTH, HEIGHT);
 		
 		if(texture == null) {
 			texture = new Texture("bullet.png");
@@ -35,10 +33,11 @@ public class Bullet {
 	}
 	
 	public void update(float deltaTime) {
-		y += SPEED * deltaTime;
-		
+		float dx = (float) (SPEED * (Math.sin(Math.toRadians(rotation))) * deltaTime);
+		x -= dx;
+		y += (float) Math.sqrt(Math.pow(SPEED, 2) - Math.pow(Math.abs(dx / deltaTime), 2)) * deltaTime;
 		// remove bullet if it is more than screen height
-		if (y > Gdx.graphics.getHeight()) {
+		if (y > Gdx.graphics.getHeight() || x > Gdx.graphics.getWidth()) {
 			remove = true;
 		}
 		
@@ -49,7 +48,7 @@ public class Bullet {
 		batch.draw(texture, x, y);
 	}
 	
-	public CollisionRect getCollisionRect() {
+	public CollisionRectangle getCollisionRect() {
 		return rect;
 	}
 }
